@@ -1,0 +1,25 @@
+name: Deploy on GitHub pages
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '23' 
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run deploy script
+      run: npm run deploy
