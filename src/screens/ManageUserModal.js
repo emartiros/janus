@@ -56,6 +56,11 @@ function ManageUserModal({ user, hideModal }) {
             Action: ["kinesisvideo:DescribeStream", "kinesisvideo:GetDataEndpoint", "kinesisvideo:GetMedia"],
             Resource: stream.StreamARN,
           },
+          {
+            Effect: "Allow",
+            Action: ["s3:GetObject"],
+            Resource: "arn:aws:s3:::hiddenhand-config/" + stream.StreamName + "-mobile",
+          }
         ],
       });
 
@@ -67,6 +72,8 @@ function ManageUserModal({ user, hideModal }) {
       iam.putUserPolicy(params, (err, data) => {
         if (err) {
           console.error(err);
+        } else {
+          updatePolicies()
         }
       });
     } else {
@@ -75,6 +82,8 @@ function ManageUserModal({ user, hideModal }) {
         (err, data) => {
           if (err) {
             console.error(err);
+          } else {
+            updatePolicies()
           }
         }
       );
@@ -92,16 +101,20 @@ function ManageUserModal({ user, hideModal }) {
     });
   }, []);
 
+  const updatePolicies = () => {
+    iam.listUserPolicies({ UserName: user.UserName }, (err, data) => {
+      if (err) {
+        console.error(err);
+      } else {
+        setPolicies(data.PolicyNames.filter((p) => p.startsWith("stream-access-")).map((p) => p.substring(14)));
+      }
+    });
+  }
+
   useEffect(() => {
     if (user) {
       modalRef.current.show();
-      iam.listUserPolicies({ UserName: user.UserName }, (err, data) => {
-        if (err) {
-          console.error(err);
-        } else {
-          setPolicies(data.PolicyNames.filter((p) => p.startsWith("stream-access-")).map((p) => p.substring(14)));
-        }
-      });
+      updatePolicies()
     } else {
       setAccessKey(null);
       setSecretKey(null);

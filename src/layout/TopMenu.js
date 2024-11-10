@@ -5,7 +5,7 @@ const TopMenu = ({ selectedEntity, onSelectEntity }) => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
       <div className="container-fluid">
-        <a className="navbar-brand" href="#">Janus</a>
+        <span className="navbar-brand">Janus</span>
         <button
           className="navbar-toggler"
           type="button"

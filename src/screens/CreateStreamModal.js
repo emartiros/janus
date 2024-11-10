@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { bootstrap } from "..";
-import { iam, kinesisVideo } from "../aws";
+import { kinesisVideo } from "../aws";
 
 function CreateStreamModal({streamUpdater}) {
   const [stream, setStream] = useState("");

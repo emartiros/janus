@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { bootstrap } from "..";
 import { kinesisVideo } from "../aws";
 import ScrollableList from "../components/ScrollableList/ScrollableList";
 import CreateStreamModal from "./CreateStreamModal";

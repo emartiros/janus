@@ -10,11 +10,41 @@ function CreateUserModal({userUpdater}) {
     modalRef.current = new bootstrap.Modal("#createUserModal", { });
   }, []);
 
+  const addDefaultPermissions = (userName) => {
+    const policyDocument = JSON.stringify({
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Action: ["kinesisvideo:ListStreams"],
+          Resource: "*"
+        },
+        {
+          Effect: "Allow",
+          Action: ["s3:ListBucket"],
+          Resource: "arn:aws:s3:::hiddenhand-config"
+        },
+      ],
+    });
+
+    const params = {
+      PolicyDocument: policyDocument,
+      PolicyName: "default",
+      UserName: userName,
+    };
+    iam.putUserPolicy(params, (err, data) => {
+      if (err) {
+        console.error(err);
+      }
+    });
+  }
+
   const handleSubmit = (e) => {
     iam.createUser({UserName: username}, (err, data) => {
       if (err) {
         console.log(err)
       } else {
+        addDefaultPermissions(data.User.UserName)
         setUsername("");
         modalRef.current.hide();
         userUpdater()

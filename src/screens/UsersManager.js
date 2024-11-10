@@ -6,10 +6,10 @@ import ManageUserModal from "./ManageUserModal";
 
 function UsersManager() {
   const [users, setUsers] = useState();
-  const [selectedUser, setSelectedUser] = useState()
+  const [selectedUser, setSelectedUser] = useState();
 
   useEffect(() => {
-    updateUsers()
+    updateUsers();
   }, []);
 
   const updateUsers = () => {
@@ -17,39 +17,68 @@ function UsersManager() {
       if (err) {
         console.error(err);
       } else {
-        setUsers(data.Users.filter(u => u.UserName !== 'janus'));
+        setUsers(data.Users.filter((u) => u.UserName !== "janus"));
       }
     });
-  }
+  };
 
   const deleteUser = (user) => {
-    iam.deleteUser({UserName: user.UserName}, (err, data) => {
+    iam.listAccessKeys({ UserName: user.UserName }, (err, data) => {
       if (err) {
-        console.log(err)
+        console.error(err);
       } else {
-        updateUsers()
+        if (data.AccessKeyMetadata.length === 0) {
+          iam.deleteUser({ UserName: user.UserName }, (err, data) => {
+            if (err) {
+              console.log(err);
+            } else {
+              updateUsers();
+            }
+          });
+        }
+        let size = data.AccessKeyMetadata.length;
+        data.AccessKeyMetadata.forEach((a) =>
+          iam.deleteAccessKey({ UserName: user.UserName, AccessKeyId: a.AccessKeyId }, (err, data) => {
+            if (err) {
+              console.error(err);
+            } else {
+              size -= 1;
+              if (size === 0) {
+                iam.deleteUser({ UserName: user.UserName }, (err, data) => {
+                  if (err) {
+                    console.log(err);
+                  } else {
+                    updateUsers();
+                  }
+                });
+              }
+            }
+          })
+        );
       }
-    })
-  }
+    });
+  };
 
   const renderUser = (user) => {
-
     return (
-      <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', gap: 16}}>
-        <span style={{cursor: 'pointer'}} onClick={() => setSelectedUser(user)}>{user.UserName}</span>
-        <button className="btn btn-danger" onClick={() => deleteUser(user)}>Delete</button>
+      <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-start", gap: 16 }}>
+        <span style={{ cursor: "pointer" }} onClick={() => setSelectedUser(user)}>
+          {user.UserName}
+        </span>
+        <button className="btn btn-danger" onClick={() => deleteUser(user)}>
+          Delete
+        </button>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div>
       <div>
-        <CreateUserModal userUpdater={updateUsers}/>
+        <CreateUserModal userUpdater={updateUsers} />
       </div>
-      <ManageUserModal user={selectedUser} hideModal={() => setSelectedUser(null)}/>
+      <ManageUserModal user={selectedUser} hideModal={() => setSelectedUser(null)} />
       <ScrollableList items={users?.map((u) => renderUser(u))} />
-    
     </div>
   );
 }
