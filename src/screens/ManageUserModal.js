@@ -60,6 +60,11 @@ function ManageUserModal({ user, hideModal }) {
             Effect: "Allow",
             Action: ["s3:GetObject"],
             Resource: "arn:aws:s3:::hiddenhand-config/" + stream.StreamName + "-mobile",
+          },
+          {
+            Effect: "Allow",
+            Action: ["s3:PutObject"],
+            Resource: "arn:aws:s3:::hiddenhand-config/" + stream.StreamName + "-pc",
           }
         ],
       });
