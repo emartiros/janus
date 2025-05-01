@@ -22,19 +22,38 @@ function UsersManager() {
     });
   };
 
-  const deleteUser = (user) => {
+  const deletePolicies = (user, then) => {
+    iam.listUserPolicies( { UserName: user.UserName }, (err, data) => {
+      if (err) {
+        console.error(err)
+      } else {
+        const deletePromises = data.PolicyNames.map(policyName =>
+          new Promise((resolve, reject) => {
+            iam.deleteUserPolicy({ UserName: user.UserName, PolicyName: policyName }, (err, data) => {
+              if (err) {
+                console.error(`Failed to delete policy ${policyName}:`, err);
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          })
+        );
+        Promise.all(deletePromises).then(() => {
+          console.log("All policies deleted.");
+          then();
+        })
+      }
+    })
+  }
+
+  const deleteAccessKeys = (user, then) => {
     iam.listAccessKeys({ UserName: user.UserName }, (err, data) => {
       if (err) {
         console.error(err);
       } else {
         if (data.AccessKeyMetadata.length === 0) {
-          iam.deleteUser({ UserName: user.UserName }, (err, data) => {
-            if (err) {
-              console.log(err);
-            } else {
-              updateUsers();
-            }
-          });
+          then(user)
         }
         let size = data.AccessKeyMetadata.length;
         data.AccessKeyMetadata.forEach((a) =>
@@ -44,19 +63,30 @@ function UsersManager() {
             } else {
               size -= 1;
               if (size === 0) {
-                iam.deleteUser({ UserName: user.UserName }, (err, data) => {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    updateUsers();
-                  }
-                });
+                then(user)
               }
             }
           })
         );
       }
     });
+  }
+
+  const deleteIam = (user) => {
+    iam.deleteUser({ UserName: user.UserName }, (err, data) => {
+      if (err) {
+        console.log(err);
+      } else {
+        updateUsers();
+      }
+    });
+  }
+
+  const deleteUser = (user) => {
+    deleteAccessKeys(user, 
+      () => deletePolicies(user,
+        () => deleteIam(user)
+      ))
   };
 
   const renderUser = (user) => {
